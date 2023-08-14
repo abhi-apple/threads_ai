@@ -131,62 +131,62 @@ function PostThread({ userId }: Props) {
     setLoading(true);
     try {
       const options = {
-        method: "POST",
-        url: "https://chatgpt-api7.p.rapidapi.com/ask",
+        method: 'POST',
+        url: 'https://open-ai21.p.rapidapi.com/chatmpt',
         headers: {
-          "content-type": "application/json",
-          "X-RapidAPI-Key":
-            "ce222f844dmshe102f93562134c4p184e64jsn78b106510366",
-          "X-RapidAPI-Host": "chatgpt-api7.p.rapidapi.com",
+          'content-type': 'application/json',
+          'X-RapidAPI-Key': 'ce222f844dmshe102f93562134c4p184e64jsn78b106510366',
+          'X-RapidAPI-Host': 'open-ai21.p.rapidapi.com',
         },
         data: {
-          query: "Generate relatable hashtags for my post: " + values.thread,
+          message: 'Generate relatable hashtags for my post: ' + values.thread,
         },
       };
+  
+    const response = await axios.request(options);
+    console.log(response.data.MPT);
+    const generatedHashtags = response.data.MPT; // Assuming the response structure is different from the previous API
 
-      const response = await axios.request(options);
-      console.log(response);
-      const generatedHashtags = response.data.response;
-
-      if (generatedHashtags && typeof generatedHashtags === "string") {
-        const hashtagArray = generatedHashtags.split("\n");
-        setHashtags(hashtagArray);
-      } else {
-        console.error("Invalid generated hashtags data:", generatedHashtags);
-      }
+    if (generatedHashtags && typeof generatedHashtags === 'string') {
+      const hashtagArray = generatedHashtags.split(' '); // Split the string into an array of hashtags
+      setHashtags(hashtagArray);
+    } else {
+      console.error('Invalid generated hashtags data:', generatedHashtags);
+    }
     } catch (error) {
       console.error(error);
     } finally {
       setLoading(false); // Set loading state back to false after API call, whether successful or not
     }
   };
+  
 
   const correctMistakes = async (values: z.infer<typeof ThreadValidation>) => {
     setloading(true);
     try {
       const options = {
-        method: "POST",
-        url: "https://chatgpt-api7.p.rapidapi.com/ask",
+        method: 'POST',
+        url: 'https://open-ai21.p.rapidapi.com/chatmpt',
         headers: {
-          "content-type": "application/json",
-          "X-RapidAPI-Key":
-            "ce222f844dmshe102f93562134c4p184e64jsn78b106510366",
-          "X-RapidAPI-Host": "chatgpt-api7.p.rapidapi.com",
+          'content-type': 'application/json',
+          'X-RapidAPI-Key': 'ce222f844dmshe102f93562134c4p184e64jsn78b106510366',
+          'X-RapidAPI-Host': 'open-ai21.p.rapidapi.com',
         },
         data: {
-          query: "Correct the mistakes in my post: \n" + values.thread,
+          message: 'Correct the mistakes in my post:\n' + values.thread,
         },
       };
-
+  
       const response = await axios.request(options);
       console.log(response);
-      setCorrectedText(response.data.response);
+      setCorrectedText(response.data.MPT); // Assuming the response structure is different from the previous API
     } catch (error) {
       console.error(error);
     } finally {
       setloading(false); // Set loading state back to false after API call, whether successful or not
     }
   };
+  
 
   const onSubmit = async (values: z.infer<typeof ThreadValidation>) => {
     await createThread({
