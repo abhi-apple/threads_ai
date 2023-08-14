@@ -24,6 +24,7 @@ import { isBase64Image } from "@/lib/utils";
 
 import { UserValidation } from "@/lib/validations/user";
 import { updateUser } from "@/lib/actions/user.actions";
+const axios = require("axios");
 
 interface Props {
   user: {
@@ -44,6 +45,8 @@ const AccountProfile = ({ user, btnTitle }: Props) => {
 
   const [files, setFiles] = useState<File[]>([]);
 
+  const [loading, setLoading] = useState(false);
+  const [correctedBio, setCorrectedBio] = useState<string>("");
   const form = useForm<z.infer<typeof UserValidation>>({
     resolver: zodResolver(UserValidation),
     defaultValues: {
@@ -53,6 +56,32 @@ const AccountProfile = ({ user, btnTitle }: Props) => {
       bio: user?.bio ? user.bio : "",
     },
   });
+  const generateEnhancedBio = async (values: z.infer<typeof UserValidation>) => {
+    setLoading(true);
+    try {
+      const options = {
+        method: "POST",
+        url: "https://open-ai21.p.rapidapi.com/chatmpt",
+        headers: {
+          "content-type": "application/json",
+          "X-RapidAPI-Key":
+            "ce222f844dmshe102f93562134c4p184e64jsn78b106510366",
+          "X-RapidAPI-Host": "open-ai21.p.rapidapi.com",
+        },
+        data: {
+          message: "Enhance the bio suitable for instagram:\n" + values.bio,
+        },
+      };
+
+      const response = await axios.request(options);
+      console.log(response);
+      setCorrectedBio(response.data.MPT); // Assuming the response structure is different from the previous API
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false); // Set loading state back to false after API call, whether successful or not
+    }
+  };
 
   const onSubmit = async (values: z.infer<typeof UserValidation>) => {
     const blob = values.profile_photo;
@@ -108,40 +137,40 @@ const AccountProfile = ({ user, btnTitle }: Props) => {
   return (
     <Form {...form}>
       <form
-        className='flex flex-col justify-start gap-10'
+        className="flex flex-col justify-start gap-10"
         onSubmit={form.handleSubmit(onSubmit)}
       >
         <FormField
           control={form.control}
-          name='profile_photo'
+          name="profile_photo"
           render={({ field }) => (
-            <FormItem className='flex items-center gap-4'>
-              <FormLabel className='account-form_image-label'>
+            <FormItem className="flex items-center gap-4">
+              <FormLabel className="account-form_image-label">
                 {field.value ? (
                   <Image
                     src={field.value}
-                    alt='profile_icon'
+                    alt="profile_icon"
                     width={96}
                     height={96}
                     priority
-                    className='rounded-full object-contain'
+                    className="rounded-full object-contain"
                   />
                 ) : (
                   <Image
-                    src='/assets/profile.svg'
-                    alt='profile_icon'
+                    src="/assets/profile.svg"
+                    alt="profile_icon"
                     width={24}
                     height={24}
-                    className='object-contain'
+                    className="object-contain"
                   />
                 )}
               </FormLabel>
-              <FormControl className='flex-1 text-base-semibold text-gray-200'>
+              <FormControl className="flex-1 text-base-semibold text-gray-200">
                 <Input
-                  type='file'
-                  accept='image/*'
-                  placeholder='Add profile photo'
-                  className='account-form_image-input'
+                  type="file"
+                  accept="image/*"
+                  placeholder="Add profile photo"
+                  className="account-form_image-input"
                   onChange={(e) => handleImage(e, field.onChange)}
                 />
               </FormControl>
@@ -151,16 +180,16 @@ const AccountProfile = ({ user, btnTitle }: Props) => {
 
         <FormField
           control={form.control}
-          name='name'
+          name="name"
           render={({ field }) => (
-            <FormItem className='flex w-full flex-col gap-3'>
-              <FormLabel className='text-base-semibold text-light-2'>
+            <FormItem className="flex w-full flex-col gap-3">
+              <FormLabel className="text-base-semibold text-light-2">
                 Name
               </FormLabel>
               <FormControl>
                 <Input
-                  type='text'
-                  className='account-form_input no-focus'
+                  type="text"
+                  className="account-form_input no-focus"
                   {...field}
                 />
               </FormControl>
@@ -171,16 +200,16 @@ const AccountProfile = ({ user, btnTitle }: Props) => {
 
         <FormField
           control={form.control}
-          name='username'
+          name="username"
           render={({ field }) => (
-            <FormItem className='flex w-full flex-col gap-3'>
-              <FormLabel className='text-base-semibold text-light-2'>
+            <FormItem className="flex w-full flex-col gap-3">
+              <FormLabel className="text-base-semibold text-light-2">
                 Username
               </FormLabel>
               <FormControl>
                 <Input
-                  type='text'
-                  className='account-form_input no-focus'
+                  type="text"
+                  className="account-form_input no-focus"
                   {...field}
                 />
               </FormControl>
@@ -191,16 +220,16 @@ const AccountProfile = ({ user, btnTitle }: Props) => {
 
         <FormField
           control={form.control}
-          name='bio'
+          name="bio"
           render={({ field }) => (
-            <FormItem className='flex w-full flex-col gap-3'>
-              <FormLabel className='text-base-semibold text-light-2'>
+            <FormItem className="flex w-full flex-col gap-3">
+              <FormLabel className="text-base-semibold text-light-2">
                 Bio
               </FormLabel>
               <FormControl>
                 <Textarea
                   rows={10}
-                  className='account-form_input no-focus'
+                  className="account-form_input no-focus"
                   {...field}
                 />
               </FormControl>
@@ -208,8 +237,28 @@ const AccountProfile = ({ user, btnTitle }: Props) => {
             </FormItem>
           )}
         />
+        <Button
+          className="bg-yellow-500"
+          type="button"
+          onClick={form.handleSubmit(generateEnhancedBio)}
+        >
+          Enhance the bio
+        </Button>
 
-        <Button type='submit' className='bg-primary-500'>
+        {loading ? (
+          <div className="bg-light-1 p-4 rounded-md animate-pulse">
+            <div className="h-4 bg-gray-300 rounded w-16 mb-2"></div>
+            <p className="text-dark-1 ml-96 mb-2">Loading....</p>
+            <div className="h-4 bg-gray-300 rounded w-24"></div>
+          </div>
+        ) : correctedBio ? (
+          <div className="bg-light-1 p-4 rounded-md">
+            <p>Enhanced Bio:</p>
+            <p className="text-dark-1">{correctedBio}</p>
+          </div>
+        ) : null}
+
+        <Button type="submit" className="bg-primary-500">
           {btnTitle}
         </Button>
       </form>
